@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "388698899604",
+    "project_id": "websisutemu",
+    "storage_bucket": "websisutemu.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:388698899604:android:deaf07c6a8d8a43253e081",
+        "android_client_info": {
+          "package_name": "com.example.weather"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-MVfPZtkkRan_ZdN54up-6FEMynuYDwE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
