@@ -36,6 +36,46 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   Uint8List? _imgBin;
   String? _imgUrl;
+  Uint8List? _presetImgBin;
+  String? _presetImgUrl;
+
+  Future<void> _uploadImages() async {
+    if (_imgBin == null) return;
+
+    const srv = "https://wsdserver-5ln0.onrender.com";
+    final uri = Uri.parse('$srv/v1/photos');
+    final req = http.MultipartRequest('POST', uri);
+    
+    // メイン画像の追加
+    final mpf = http.MultipartFile.fromBytes(
+      'file', 
+      _imgBin!, 
+      filename: 'main.jpg', 
+      contentType: MediaType('Image', 'jpeg')
+    );
+    req.files.add(mpf);
+
+    // 事前設定画像がある場合は追加
+    if (_presetImgBin != null) {
+      final presetMpf = http.MultipartFile.fromBytes(
+        'preset_file', 
+        _presetImgBin!, 
+        filename: 'preset.jpg', 
+        contentType: MediaType('Image', 'jpeg')
+      );
+      req.files.add(presetMpf);
+    }
+
+    final resp = await req.send();
+    final respStr = await resp.stream.bytesToString();
+    final respMap = jsonDecode(respStr);
+    setState(() {
+      _imgUrl = "$srv/${respMap['url']}";
+      if (respMap['preset_url'] != null) {
+        _presetImgUrl = "$srv/${respMap['preset_url']}";
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,40 +122,74 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
             ),
+            if (_presetImgBin != null || _presetImgUrl != null)
+              Expanded(
+                flex: 2,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('事前設定画像'),
+                          Expanded(
+                            child: _presetImgBin != null
+                                ? Image.memory(_presetImgBin!)
+                                : _presetImgUrl != null
+                                    ? Image.network(_presetImgUrl!)
+                                    : const Center(child: Text("画像がありません")),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ImagePicker()
-            .pickImage(source: ImageSource.gallery)
-            .then((xfile) async {
-              if (xfile == null) return;
-              Uint8List img = await xfile.readAsBytes();
-              setState(() {
-                _imgBin = img;
-                _imgUrl = null;
-              });
-              const srv = "https://wsdserver-5ln0.onrender.com";
-              final uri = Uri.parse('$srv/v1/photos');
-              final req = http.MultipartRequest('POST', uri);
-              final mpf = http.MultipartFile.fromBytes(
-                'file', 
-                img, 
-                filename: 'foo.jpg', 
-                contentType: MediaType('Image', 'jpeg')
-              );
-              req.files.add(mpf);
-              final resp = await req.send();
-              final respStr = await resp.stream.bytesToString();
-              final respMap = jsonDecode(respStr);
-              setState(() {
-                _imgUrl = "$srv/${respMap['url']}";
-              });
-            });
-        },
-        tooltip: '画像を選択',
-        child: const Icon(Icons.image),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              ImagePicker()
+                .pickImage(source: ImageSource.gallery)
+                .then((xfile) async {
+                  if (xfile == null) return;
+                  Uint8List img = await xfile.readAsBytes();
+                  setState(() {
+                    _imgBin = img;
+                    _imgUrl = null;
+                  });
+                  await _uploadImages();
+                });
+            },
+            tooltip: 'メイン画像を選択',
+            child: const Icon(Icons.image),
+          ),
+          const SizedBox(width: 16),
+          FloatingActionButton(
+            onPressed: () {
+              ImagePicker()
+                .pickImage(source: ImageSource.gallery)
+                .then((xfile) async {
+                  if (xfile == null) return;
+                  Uint8List img = await xfile.readAsBytes();
+                  setState(() {
+                    _presetImgBin = img;
+                    _presetImgUrl = null;
+                  });
+                  if (_imgBin != null) {
+                    await _uploadImages();
+                  }
+                });
+            },
+            tooltip: '事前設定画像を選択',
+            child: const Icon(Icons.add_photo_alternate),
+          ),
+        ],
       ),
     );
   }
