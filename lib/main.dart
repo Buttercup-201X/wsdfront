@@ -4,6 +4,7 @@ import 'package:http_parser/http_parser.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -38,6 +39,19 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _imgUrl;
   Uint8List? _presetImgBin;
   String? _presetImgUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPresetImage();
+  }
+
+  Future<void> _loadPresetImage() async {
+    final bytes = await rootBundle.load('dog.jpg');
+    setState(() {
+      _presetImgBin = bytes.buffer.asUint8List();
+    });
+  }
 
   Future<void> _uploadImages() async {
     if (_imgBin == null) return;
@@ -168,26 +182,6 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             tooltip: 'メイン画像を選択',
             child: const Icon(Icons.image),
-          ),
-          const SizedBox(width: 16),
-          FloatingActionButton(
-            onPressed: () {
-              ImagePicker()
-                .pickImage(source: ImageSource.gallery)
-                .then((xfile) async {
-                  if (xfile == null) return;
-                  Uint8List img = await xfile.readAsBytes();
-                  setState(() {
-                    _presetImgBin = img;
-                    _presetImgUrl = null;
-                  });
-                  if (_imgBin != null) {
-                    await _uploadImages();
-                  }
-                });
-            },
-            tooltip: '事前設定画像を選択',
-            child: const Icon(Icons.add_photo_alternate),
           ),
         ],
       ),
