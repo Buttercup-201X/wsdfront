@@ -38,7 +38,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Uint8List? _imgBin;
   String? _imgUrl;
   Uint8List? _presetImgBin;
-  String? _presetImgUrl;
 
   @override
   void initState() {
@@ -47,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _loadPresetImage() async {
-    final bytes = await rootBundle.load('dog.jpg');
+    final bytes = await rootBundle.load('wanted.jpg');
     setState(() {
       _presetImgBin = bytes.buffer.asUint8List();
     });
@@ -69,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
     req.files.add(mpf);
 
-    // 事前設定画像がある場合は追加
+    // wantedの処理
     if (_presetImgBin != null) {
       final presetMpf = http.MultipartFile.fromBytes(
         'preset_file', 
@@ -85,9 +84,6 @@ class _MyHomePageState extends State<MyHomePage> {
     final respMap = jsonDecode(respStr);
     setState(() {
       _imgUrl = "$srv/${respMap['url']}";
-      if (respMap['preset_url'] != null) {
-        _presetImgUrl = "$srv/${respMap['preset_url']}";
-      }
     });
   }
 
@@ -136,30 +132,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
             ),
-            if (_presetImgBin != null || _presetImgUrl != null)
-              Expanded(
-                flex: 2,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('事前設定画像'),
-                          Expanded(
-                            child: _presetImgBin != null
-                                ? Image.memory(_presetImgBin!)
-                                : _presetImgUrl != null
-                                    ? Image.network(_presetImgUrl!)
-                                    : const Center(child: Text("画像がありません")),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
           ],
         ),
       ),
@@ -180,7 +152,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   await _uploadImages();
                 });
             },
-            tooltip: 'メイン画像を選択',
+            tooltip: '画像を選択',
             child: const Icon(Icons.image),
           ),
         ],
