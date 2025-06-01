@@ -55,7 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _uploadImages() async {
     if (_imgBin == null) return;
 
-    const srv = "https://wsdserver-5ln0.onrender.com";
+    const srv = "https://wsdcollage.onrender.com";
     final uri = Uri.parse('$srv/v1/photos');
     final req = http.MultipartRequest('POST', uri);
     
